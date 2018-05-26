@@ -1,0 +1,61 @@
+{
+  "name": "performance-timings",
+  "version": "0.0.1-test",
+  "description": "Analyze build and perf timings for a service",
+  "scripts": {
+    "precommit": "lint-staged",
+    "format": "prettier --write \"{./,./{src,test}/**/}*.{js,ts,json}\"",
+    "format-check": "prettier -l \"{./,./{src,test}/**/}*.{js,ts,json}\"",
+    "test": "jest",
+    "test:unit": "JEST_PROJECT=unit jest",
+    "build":
+      "tsc --emitDeclarationOnly && babel src --out-dir lib --extensions \".ts,.tsx\"",
+    "rebuild": "yarn clean && yarn build",
+    "type-check": "tsc --noEmit",
+    "clean": "rimraf ./lib yarn-error.log"
+  },
+  "main": "index.js",
+  "files": ["lib"],
+  "repository": "github:lshearer/performance-timings",
+  "keywords": [],
+  "bugs": "https://github.com/lshearer/performance-timings/issues",
+  "homepage": "https://github.com/lshearer/performance-timings#readme",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@babel/cli": "7.0.0-beta.46",
+    "@babel/core": "^7.0.0-beta.46",
+    "@babel/plugin-proposal-class-properties": "7.0.0-beta.46",
+    "@babel/plugin-proposal-object-rest-spread": "7.0.0-beta.46",
+    "@babel/preset-env": "7.0.0-beta.46",
+    "@babel/preset-typescript": "7.0.0-beta.46",
+    "@types/glob": "^5.0.35",
+    "@types/jest": "^22.2.3",
+    "@types/node": "^10.0.2",
+    "@types/tmp": "^0.0.33",
+    "@types/webpack": "^4.1.4",
+    "babel-core": "^7.0.0-0",
+    "babel-jest": "^22.4.3",
+    "glob": "^7.1.2",
+    "husky": "^0.14.3",
+    "jest": "^22.4.3",
+    "lint-staged": "^7.0.5",
+    "prettier": "^1.12.1",
+    "rimraf": "^2.6.2",
+    "source-map": "^0.7.2",
+    "tmp": "^0.0.33",
+    "typescript": "^2.8.1",
+    "webpack": "^4.6.0"
+  },
+  "lint-staged": {
+    "{./,./{src,test}/**/}*.{js,ts,json}": ["yarn run format", "git add"]
+  },
+  "prettier": {
+    "singleQuote": true,
+    "trailingComma": "es5",
+    "jsxBracketSameLine": true,
+    "tabWidth": 2
+  },
+  "engines": {
+    "node": "8"
+  }
+}

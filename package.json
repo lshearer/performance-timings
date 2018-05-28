@@ -1,7 +1,7 @@
 {
   "name": "performance-timings",
-  "version": "0.0.1-test",
-  "description": "Analyze build and perf timings for a service",
+  "version": "0.0.0",
+  "private": true,
   "scripts": {
     "precommit": "lint-staged",
     "format": "prettier --write \"{./,./{src,test}/**/}*.{js,ts,json}\"",
@@ -9,18 +9,13 @@
     "test": "jest",
     "test:unit": "JEST_PROJECT=unit jest",
     "build":
-      "tsc --emitDeclarationOnly && babel src --out-dir lib --extensions \".ts,.tsx\"",
+      "tsc -p tsconfig.build.json && babel src --out-dir lib -s inline --extensions \".ts,.tsx\"",
     "rebuild": "yarn clean && yarn build",
     "type-check": "tsc --noEmit",
-    "clean": "rimraf ./lib yarn-error.log"
+    "clean": "rimraf ./lib ./workspace yarn-error.log",
+    "time": "yarn build && node ./lib/cli.js",
+    "time:debug": "yarn build && node --inspect-brk ./lib/cli.js"
   },
-  "main": "index.js",
-  "files": ["lib"],
-  "repository": "github:lshearer/performance-timings",
-  "keywords": [],
-  "bugs": "https://github.com/lshearer/performance-timings/issues",
-  "homepage": "https://github.com/lshearer/performance-timings#readme",
-  "license": "UNLICENSED",
   "devDependencies": {
     "@babel/cli": "7.0.0-beta.46",
     "@babel/core": "^7.0.0-beta.46",
@@ -57,5 +52,10 @@
   },
   "engines": {
     "node": "8"
+  },
+  "dependencies": {
+    "@types/fs-extra": "^5.0.2",
+    "cross-spawn-promise": "^0.10.1",
+    "fs-extra": "^6.0.1"
   }
 }

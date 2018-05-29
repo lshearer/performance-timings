@@ -1,6 +1,10 @@
+import chalk from 'chalk';
 import { readFile, writeFile } from 'fs-extra';
 import { join } from 'path';
 import Command from './Command';
+import TimeSpan from './TimeSpan';
+import Timer from './Timer';
+import { Timing } from './Timing';
 import { ClonedRepo } from './TimingRun';
 import {
   TimingEvent,
@@ -14,26 +18,35 @@ addBuildResourcesPath();
 export default class Build {
   constructor(private repo: ClonedRepo) {}
 
-  async install() {
-    console.log('yarn install');
-    await new Command({
-      cmd: 'yarn',
-      args: ['install'],
-      relativePath: 'Hudl.Videospa.Webapp/VideoSPA_UI',
-    }).exec(this.repo);
+  async install(): Promise<Timing> {
+    return {
+      name: 'yarn install',
+      time: await Timer.for(() =>
+        new Command({
+          cmd: 'yarn',
+          args: ['install'],
+          relativePath: 'Hudl.Videospa.Webapp/VideoSPA_UI',
+        }).exec(this.repo)
+      ),
+    };
   }
 
-  async run() {
-    await new Command({
-      cmd: 'yarn',
-      args: ['build'],
-      relativePath: 'Hudl.Videospa.Webapp/VideoSPA_UI',
-    }).exec(this.repo);
+  async build(): Promise<Timing> {
+    return {
+      name: 'Build',
+      time: await Timer.for(() =>
+        new Command({
+          cmd: 'yarn',
+          args: ['build'],
+          relativePath: 'Hudl.Videospa.Webapp/VideoSPA_UI',
+        }).exec(this.repo)
+      ),
+    };
   }
 
   async watch() {
     let finished = false;
-    const times: TimingEvent[] = [];
+    const events: TimingEvent[] = [];
     const parser = new TimingEventParser();
     try {
       await new Command({
@@ -45,40 +58,19 @@ export default class Build {
             return;
           }
 
-          times.push(event);
-
-          // const timings = /\[PerformanceTimingPlugin\] \[(\d+)\] \[.*?] \[(.*?)\] \[(.*)\]/.exec(
-          //   output
-          // );
-          // if (timings == null) {
-          //   return;
-          // }
-
-          // const [, rawTime, type, rawData] = timings;
-          // // if (!output.includes('PerformanceTimingPlugin')) {
-          // //   return;
-          // // }
-          // // if (output.includes)
-
-          // const data = JSON.parse(rawData);
-          // const time = parseInt(rawTime, 10);
-          // // Log all parsed events
-          // times.push({
-          //   time,
-          //   event: type,
-          //   data,
-          // });
+          events.push(event);
 
           if (event.type === TimingEventType.WatchCompileDone) {
-            if (event.data === 1) {
+            if (event.count === 1) {
               // Update a file to trigger a rebuild
+              // Using timeout for clearer logging
               this.updateFile(
                 'Hudl.Videospa.Webapp/VideoSPA_UI/source/app/test.jsx',
                 contents => {
                   return contents + `// Trigger file change ${Date.now()}\n`;
                 }
               );
-            } else if (event.data === 2) {
+            } else if (event.count === 2) {
               // Files have been rebuilt.  Stop the watch process
               finished = true;
               command.kill();
@@ -93,24 +85,25 @@ export default class Build {
       }
     }
 
-    const compileTimes = [];
-    for (let timing of times) {
-      if (timing.type === TimingEventType.WatchCompileStart) {
-        const startTime = timing.time;
-        const endLog = times.find(
-          e =>
-            e.type === TimingEventType.WatchCompileDone &&
-            e.data === timing.data
+    const compileTimes: Timing[] = [];
+    for (let event of events) {
+      if (event.type === TimingEventType.WatchCompileStart) {
+        const count = event.count;
+        const endEvent = events.find(
+          ev =>
+            ev.type === TimingEventType.WatchCompileDone && ev.count === count
         );
-        if (!endLog) {
+        if (!endEvent) {
           throw new Error(
-            `Missing end log for watch compile: ${JSON.stringify(endLog)}`
+            `Missing matching ${
+              TimingEventType.WatchCompileDone
+            } event log for event: ${JSON.stringify(event)}`
           );
         }
-        const time = endLog.time - startTime;
+
         compileTimes.push({
-          compileNumber: timing.data,
-          time,
+          name: `Watch compilation (${event.count})`,
+          time: TimeSpan.between(event.time, endEvent.time),
         });
       }
     }
@@ -121,9 +114,10 @@ export default class Build {
     relativePath: string,
     updateContent: (content: string) => string
   ) {
+    console.log(chalk.grey(`Updating file ${relativePath}`));
+
     const path = join(this.repo.path, relativePath);
     const contents = await readFile(path, 'utf8');
-
     await writeFile(path, updateContent(contents));
   }
 }

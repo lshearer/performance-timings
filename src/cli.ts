@@ -1,12 +1,9 @@
+import { resolve } from 'path';
 import TimingRun from './TimingRun';
 import config from './config';
-import { resolve } from 'path';
+import indent from './util/indent';
 
 process.env.FORCE_COLOR = 'true';
-
-function indent(text: string) {
-  return '  ' + text.split('\n').join('\n  ');
-}
 
 const workingCloneDirectory = resolve(__dirname, '..', 'workspace');
 (async function() {

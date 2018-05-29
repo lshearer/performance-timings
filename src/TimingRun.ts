@@ -1,6 +1,7 @@
 import { ensureDir, pathExists } from 'fs-extra';
 import { resolve } from 'path';
 import Build from './Build';
+import { Timing } from './Timing';
 import { Config } from './config';
 import { clone, pull } from './git';
 
@@ -22,13 +23,13 @@ export default class TimingRun {
     const repos = await this.setUpTempClones(config);
 
     for (let repo of repos) {
-      await this.getTimings(repo);
+      const timings = await this.getTimings(repo);
+      this.logTimingsForRepo(repo, timings);
     }
   }
 
   private async setUpTempClones(config: Config): Promise<ClonedRepo[]> {
     const { workingCloneDirectory } = this.options;
-    // await remove(workingCloneDirectory);
 
     const clonedRepos: ClonedRepo[] = [];
 
@@ -41,7 +42,7 @@ export default class TimingRun {
         await ensureDir(destination);
         await clone(config.repo, destination, branch);
       } else {
-        // Need to checkout branch to ensure it's up to date
+        // Need to pull branch to ensure it's up to date
         await pull(destination);
       }
       clonedRepos.push({
@@ -54,21 +55,22 @@ export default class TimingRun {
   }
 
   private async getTimings(repo: ClonedRepo) {
-    const { buildTime, watchTimes } = await this.runBuild(repo);
-    console.log(`Built in ${buildTime / 1000}s`);
-    console.log(`Watch results:`, watchTimes);
+    const build = new Build(repo);
+    const timings = [];
+    timings.push(await build.install());
+    timings.push(await build.build());
+    timings.push(...(await build.watch()));
+    return timings;
   }
 
-  private async runBuild(repo: ClonedRepo) {
-    const build = new Build(repo);
-    await build.install();
-
-    const startTime = Date.now();
-    await build.run();
-    const endTime = Date.now();
-    const buildTime = endTime - startTime;
-
-    const times = await build.watch();
-    return { buildTime, watchTimes: times };
+  private logTimingsForRepo(repo: ClonedRepo, timings: Timing[]) {
+    console.table(
+      timings.map(timing => {
+        return {
+          name: timing.name,
+          time: timing.time.formatAsSeconds(),
+        };
+      })
+    );
   }
 }

@@ -51,7 +51,7 @@
     "tabWidth": 2
   },
   "engines": {
-    "node": "8"
+    "node": "10"
   },
   "dependencies": {
     "@types/fs-extra": "^5.0.2",

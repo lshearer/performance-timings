@@ -13,7 +13,9 @@
     "rebuild": "yarn clean && yarn build",
     "type-check": "tsc --noEmit",
     "clean": "rimraf ./lib ./workspace yarn-error.log",
-    "time": "yarn build && node ./lib/cli.js",
+    "time":
+      "NODE_OPTIONS=--max-old-space-size=4096 yarn build && node ./lib/cli.js",
+    "time:test": "TEST_RUN=1 yarn time",
     "time:debug": "yarn build && node --inspect-brk ./lib/cli.js"
   },
   "devDependencies": {
@@ -55,6 +57,7 @@
   },
   "dependencies": {
     "@types/fs-extra": "^5.0.2",
+    "console.table": "^0.10.0",
     "cross-spawn-promise": "^0.10.1",
     "fs-extra": "^6.0.1"
   }

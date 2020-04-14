@@ -3,3 +3,7 @@ node_modules
 
 /lib
 /workspace
+
+
+/browsertime
+/site-speed-test

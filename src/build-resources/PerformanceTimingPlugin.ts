@@ -1,5 +1,7 @@
+import chalk from 'chalk';
 import webpack from 'webpack';
 import { TimingEventLogger } from './TimingEvent';
+import { defaultRelativeTestFilePath, isTestRun } from './testRun';
 
 const pluginName = 'PerformanceTimingPlugin';
 
@@ -7,11 +9,14 @@ export default class PerformanceTimingPlugin {
   private eventLogger: TimingEventLogger = new TimingEventLogger();
 
   apply(compiler: webpack.Compiler) {
+    console.log(`node version:${process.version}`);
+
     if (compiler.options.watch) {
       this.applyWatch(compiler);
     } else {
       this.applyBuild(compiler);
     }
+    this.applyTestEntryPoints(compiler);
   }
 
   applyWatch(compiler: webpack.Compiler) {
@@ -61,6 +66,15 @@ export default class PerformanceTimingPlugin {
       compiler.plugin('done', stats => {
         done(stats);
       });
+    }
+  }
+
+  applyTestEntryPoints(compiler: webpack.Compiler) {
+    if (isTestRun()) {
+      console.log(chalk.yellow('Using test entry point configuration'));
+      compiler.options.entry = {
+        test: process.env.TEST_RUN_FILE || defaultRelativeTestFilePath,
+      };
     }
   }
 }

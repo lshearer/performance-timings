@@ -12,6 +12,7 @@ import {
   TimingEventType,
 } from './build-resources/TimingEvent';
 import addBuildResourcesPath from './build-resources/addBuildResourcesPath';
+import { isTestRun } from './build-resources/testRun';
 
 addBuildResourcesPath();
 
@@ -64,12 +65,13 @@ export default class Build {
             if (event.count === 1) {
               // Update a file to trigger a rebuild
               // Using timeout for clearer logging
-              this.updateFile(
-                'Hudl.Videospa.Webapp/VideoSPA_UI/source/app/test.jsx',
-                contents => {
-                  return contents + `// Trigger file change ${Date.now()}\n`;
-                }
-              );
+              const filePath = isTestRun()
+                ? 'Hudl.Videospa.Webapp/VideoSPA_UI/source/app/test.jsx'
+                : 'Hudl.Videospa.Webapp/VideoSPA_UI/source/filter/default/index.jsx';
+
+              this.updateFile(filePath, contents => {
+                return contents + `// Trigger file change ${Date.now()}\n`;
+              });
             } else if (event.count === 2) {
               // Files have been rebuilt.  Stop the watch process
               finished = true;

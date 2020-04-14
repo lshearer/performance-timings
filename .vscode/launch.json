@@ -5,11 +5,23 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch executable",
+      "name": "Debug timings",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "yarn",
       "runtimeArgs": ["time:debug"],
+      "port": 9229,
+      "sourceMaps": true
+    },
+    {
+      "name": "Debug timings (test)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["time:debug"],
+      "env": {
+        "TEST_RUN": "true"
+      },
       "port": 9229,
       "sourceMaps": true
     }
